@@ -1,0 +1,551 @@
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const editor = document.querySelector('.hero-screen_editor__bv0S5');
+    const slackWindow = document.querySelector('.hero-screen_window__OwP6K.hero-screen_slackWindow__51qbp');
+    const instagramWindow = document.querySelector('.hero-screen_window__OwP6K.hero-screen_instagramWindow__P9yES');
+    const messagesWindow = document.querySelector('.hero-screen_window__OwP6K.hero-screen_messagesWindow__Swcf_');
+    const typingText = document.getElementById('typing-text');
+
+    // Typing animation - matching original approach exactly
+    const fullText = " has been the thread running through my journey. What started as curiosity in college grew into building real-world solutions—from mentoring students and developing fintech platforms to co-architecting enterprise systems adopted by global teams. Along the way, I discovered that scale is not just about technology, but about creating reliable foundations that empower people and businesses to achieve more. I thrive at the intersection of innovation and execution, driven by a passion to transform vision into measurable impact.";
+    let typingIndex = 0;
+    let typingStarted = false;
+    let typingPaused = false;
+    let typingTimeout = null;
+
+    // Use requestAnimationFrame for better performance
+    let startTime = null;
+
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+
+      // Start typing animation when editor becomes active
+      if (elapsed >= 1500 && !typingStarted) {
+        typingStarted = true;
+        startTyping();
+      }
+
+      // Apply classes at specific times
+      if (elapsed >= 1500 && !editor.classList.contains('hero-screen_editorActive___srGr')) {
+        editor.classList.add('hero-screen_editorActive___srGr');
+      }
+      if (elapsed >= 1650 && !slackWindow.classList.contains('hero-screen_hidden__Zf4h5')) {
+        slackWindow.classList.add('hero-screen_hidden__Zf4h5');
+      }
+      if (elapsed >= 1800 && !instagramWindow.classList.contains('hero-screen_hidden__Zf4h5')) {
+        instagramWindow.classList.add('hero-screen_hidden__Zf4h5');
+      }
+      if (elapsed >= 2100 && !messagesWindow.classList.contains('hero-screen_hidden__Zf4h5')) {
+        messagesWindow.classList.add('hero-screen_hidden__Zf4h5');
+      }
+
+      if (elapsed < 2100) {
+        requestAnimationFrame(animate);
+      }
+    }
+
+    function startTyping() {
+      function typeNextCharacter() {
+        if (typingIndex < fullText.length && !typingPaused) {
+          typingText.textContent = fullText.slice(0, typingIndex + 1);
+          typingIndex++;
+          typingTimeout = setTimeout(typeNextCharacter, 100); // 100ms delay between characters
+        }
+      }
+      typeNextCharacter();
+    }
+
+    function pauseTyping() {
+      typingPaused = true;
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+        typingTimeout = null;
+      }
+    }
+
+    function resumeTyping() {
+      if (typingPaused && typingStarted) {
+        typingPaused = false;
+        startTyping();
+      }
+    }
+
+    // Handle page visibility changes
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        pauseTyping();
+      } else {
+        resumeTyping();
+      }
+    });
+
+    // Handle window focus/blur
+    window.addEventListener('blur', pauseTyping);
+    window.addEventListener('focus', resumeTyping);
+
+    requestAnimationFrame(animate);
+
+    function initDockFunctionality() {
+      const dockButtons = document.querySelectorAll('.block-showcase_appButton__RgyPw');
+      const showcaseReel = document.querySelector('.Features_showcaseReel__g17fo');
+
+      const allALSOWindows = document.querySelectorAll('.ALSOWindow_alsoWindowOuter__IPv1c');
+      const pepcodingWindow = document.querySelector('.CalculatorTimeShowcase_alsoWindowOuter__4FPqB');
+
+      const windows = [
+        allALSOWindows[0],
+        allALSOWindows[1],
+        pepcodingWindow
+      ];
+
+      let activeIndex = 0;
+      let typingInProgress = new Set();
+
+      function updateActiveState(newIndex) {
+        activeIndex = newIndex;
+
+        dockButtons.forEach((button, index) => {
+          const activeDot = button.querySelector('.block-showcase_activeDot__CT689');
+          if (index === activeIndex) {
+            activeDot.textContent = '·';
+            activeDot.style.display = 'block';
+          } else {
+            activeDot.textContent = '';
+            activeDot.style.display = 'none';
+          }
+        });
+      }
+
+      function scrollToWindow(windowIndex) {
+        if (!showcaseReel || !windows[windowIndex]) {
+          return;
+        }
+
+        const windowElement = windows[windowIndex];
+        const windowContainer = windowElement.closest('[style*="width: 100%; height: 100%; position: relative; display: grid; place-items: center;"]');
+
+        if (windowContainer) {
+          const containerRect = windowContainer.getBoundingClientRect();
+          const showcaseRect = showcaseReel.getBoundingClientRect();
+
+          const containerLeft = containerRect.left - showcaseRect.left + showcaseReel.scrollLeft;
+          const centerOffset = (showcaseRect.width - containerRect.width) / 2;
+          const targetScrollLeft = containerLeft - centerOffset;
+
+          showcaseReel.scrollTo({
+            left: Math.max(0, targetScrollLeft),
+            top: 0,
+            behavior: 'smooth'
+          });
+
+          startTypingForWindow(windowIndex);
+        }
+      }
+
+      // Keep track of elements that have already been typed (persists across page session)
+      const typedElements = new Set();
+
+      // Content for all windows
+      const windowContents = {
+        0: {
+          title: 'Particle41',
+          content: "At Particle41, I wasn’t just writing features — I was engineering systems that teams relied on every day. From designing workflow platforms to building automation pipelines that eliminated hours of manual effort, every project pushed me to solve complex problems with simple, reliable solutions."
+        },
+        1: {
+          title: 'Toddle, Associate Software Engineer',
+          content: "At Toddle, I realized that true impact comes from small refinements — the quiet details that transform a good experience into a great one."
+        },
+        2: {
+          title: 'Pepcoding',
+          content: "At Pepcoding, my first company, I discovered what it means to grow together. Beyond learning the craft of building products, it was where I found mentors, teammates, and friends for life. It taught me that the workplace is not just about code, but about people, collaboration, and shared journeys.\n\n❤️ pepcoding"
+        }
+      };
+
+      // Initialize content for windows that aren't empty
+      function initializeContent() {
+        // Check if we should initialize (only once per page load)
+        if (typedElements.has('initialized')) return;
+
+        // Set initial content for windows that have content
+        Object.keys(windowContents).forEach(index => {
+          const contentId = `content-${index}`;
+          const contentElement = document.getElementById(index === '0' ? 'particle41-content' : null);
+
+          // If window has content and element exists, set it immediately (no typing animation)
+          if (windowContents[index].content && contentElement && typedElements.has(contentId)) {
+            contentElement.textContent = windowContents[index].content;
+          }
+        });
+
+        typedElements.add('initialized');
+      }
+
+      // Call initialization
+      initializeContent();
+
+      function startTypingForWindow(windowIndex) {
+        if (typingInProgress.has(windowIndex)) {
+          return;
+        }
+
+        const textElementIds = ['particle41-text', 'toddle-text', 'pepcoding-text'];
+
+        if (windowIndex >= 0 && windowIndex < textElementIds.length) {
+          const textElement = document.getElementById(textElementIds[windowIndex]);
+          const titleId = `title-${windowIndex}`;
+
+          if (textElement) {
+            // Only type title if not already typed
+            if (!typedElements.has(titleId)) {
+              textElement.textContent = '';
+              typingInProgress.add(windowIndex);
+              typeText(textElement, windowContents[windowIndex].title, 50, windowIndex);
+              typedElements.add(titleId);
+            }
+
+            // Only type content if window has content and it hasn't been typed yet
+            // We'll handle content typing in the typeText callback for the title
+            // This ensures content only starts after title is completely finished
+          }
+        }
+      }
+
+      function typeText(element, text, speed, windowIndex) {
+        let index = 0;
+        const timer = setInterval(() => {
+          if (index < text.length) {
+            element.textContent += text[index];
+            index++;
+          } else {
+            clearInterval(timer);
+            typingInProgress.delete(windowIndex);
+
+            // Special handling after content typing is complete
+            if (windowIndex === 'content-1') {
+              // Show tildes cursor for Toddle after content typing completes
+              const toddleCursor = document.getElementById('toddle-cursor');
+              if (toddleCursor) {
+                toddleCursor.style.display = 'inline';
+
+                // Show date after cursor appears
+                setTimeout(() => {
+                  const toddleDate = document.getElementById('toddle-date');
+                  if (toddleDate) {
+                    toddleDate.style.display = 'inline';
+                  }
+                }, 500);
+              }
+            } else if (windowIndex === 'content-2') {
+              // Show time for Pepcoding after content typing completes
+              const pepcodingTime = document.getElementById('pepcoding-time');
+              if (pepcodingTime) {
+                pepcodingTime.style.display = 'inline';
+              }
+            }
+
+            // If this was a title that just finished typing, start typing its content
+            if (typeof windowIndex === 'number' && windowContents[windowIndex].content) {
+              const contentId = `content-${windowIndex}`;
+              let contentElement = null;
+
+              // Get the right content element based on window index
+              if (windowIndex === 0) {
+                contentElement = document.getElementById('particle41-content');
+              } else if (windowIndex === 1) {
+                contentElement = document.getElementById('toddle-content');
+              } else if (windowIndex === 2) {
+                contentElement = document.getElementById('pepcoding-content');
+              }
+
+              if (contentElement && !typedElements.has(contentId)) {
+                // For Particle41, show avatar first, then type content
+                if (windowIndex === 0) {
+                  const avatarWrapper = document.getElementById('particle41-avatar');
+
+                  // First show the avatar with a fade-in effect
+                  setTimeout(() => {
+                    // Create and add the image
+                    avatarWrapper.innerHTML = '<img alt="" loading="lazy" width="24" height="24" decoding="async" data-nimg="1" src="./images/me.jpeg" style="color: transparent;">';
+
+                    // Fade in the avatar
+                    avatarWrapper.style.transition = 'opacity 0.3s ease-in';
+                    avatarWrapper.style.opacity = '1';
+
+                    // Then start typing content after avatar appears
+                    setTimeout(() => {
+                      contentElement.textContent = '';
+                      typeText(contentElement, windowContents[windowIndex].content, 10, contentId);
+                      typedElements.add(contentId);
+                    }, 500);
+                  }, 300);
+                } else if (windowIndex === 2) {
+                  // For Pepcoding, show response element first, then type content
+                  const pepcodingResponse = document.getElementById('pepcoding-response');
+                  if (pepcodingResponse) {
+                    pepcodingResponse.style.display = 'block';
+
+                    // Fade in the element
+                    setTimeout(() => {
+                      pepcodingResponse.style.opacity = '1';
+                    }, 10);
+
+                    // Start typing content immediately after fade starts
+                    setTimeout(() => {
+                      contentElement.textContent = '';
+                      typeText(contentElement, windowContents[windowIndex].content, 8, contentId);
+                      typedElements.add(contentId);
+                    }, 150);
+                  }
+                } else {
+                  // For other windows, just type content after a short delay
+                  setTimeout(() => {
+                    contentElement.textContent = '';
+                    typeText(contentElement, windowContents[windowIndex].content, 10, contentId);
+                    typedElements.add(contentId);
+                  }, 300);
+                }
+              }
+            }
+          }
+        }, speed);
+      }
+
+      function handleDockClick(index) {
+        updateActiveState(index);
+        scrollToWindow(index);
+      }
+
+      dockButtons.forEach((button, index) => {
+        button.addEventListener('click', () => handleDockClick(index));
+      });
+
+      updateActiveState(0);
+
+      const windowObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const windowIndex = parseInt(entry.target.dataset.windowIndex);
+            updateActiveState(windowIndex);
+            setTimeout(() => {
+              startTypingForWindow(windowIndex);
+            }, 200);
+          }
+        });
+      }, {
+        threshold: 0.5
+      });
+
+      windows.forEach((window, index) => {
+        if (window) {
+          const windowContainer = window.closest('[style*="width: 100%; height: 100%; position: relative; display: grid; place-items: center;"]');
+          if (windowContainer) {
+            windowContainer.dataset.windowIndex = index;
+            windowObserver.observe(windowContainer);
+          }
+        }
+      });
+    }
+
+    // Initialize ApiFig2 animations
+    function initApiFig2Animations() {
+      // Observer for ApiFig2_screen__QvgLu
+      const screenElement = document.querySelector('.ApiFig2_screen__QvgLu');
+      if (screenElement) {
+        const screenObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('ApiFig2_screenActive__KIQVY');
+            } else {
+              entry.target.classList.remove('ApiFig2_screenActive__KIQVY');
+            
+            }
+          });
+        }, {
+          threshold: 0.5 // Trigger when 50% of the element is visible
+        });
+
+        screenObserver.observe(screenElement);
+      }
+
+      // Observer for ApiFig2_appleLogo__y7S2e
+      const appleLogoElement = document.querySelector('.ApiFig2_appleLogo__y7S2e');
+      if (appleLogoElement) {
+        const appleLogoObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('ApiFig2_appleLogoActive__QmFCC');
+             
+            } else {
+              entry.target.classList.remove('ApiFig2_appleLogoActive__QmFCC');
+           
+            }
+          });
+        }, {
+          threshold: 0.5 // Trigger when 50% of the element is visible
+        });
+
+        appleLogoObserver.observe(appleLogoElement);
+      }
+    }
+
+    // Initialize Question Finder animation
+    function initQuestionFinderAnimation() {
+      const questionFinderElement = document.getElementById('alsoarpit_question_finder');
+      const discElement = document.querySelector('.ApiFig6_disc__zHSIe');
+
+      if (questionFinderElement && discElement) {
+        const questionFinderObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              discElement.classList.add('ApiFig6_activeDisc__051Th');
+              
+            } else {
+              discElement.classList.remove('ApiFig6_activeDisc__051Th');
+             
+            }
+          });
+        }, {
+          threshold: 0.5 // Trigger when 50% of the element is visible
+        });
+
+        questionFinderObserver.observe(questionFinderElement);
+      } else {
+        
+      }
+    }
+
+    // Initialize Bundlwise section animation (adds classes once when visible)
+    function initBundlwiseAnimation() {
+      const bundlwiseElement = document.getElementById('alsoarpit_bundlwise_section');
+
+      if (bundlwiseElement) {
+        let hasAnimated = false; // Flag to ensure animation happens only once
+
+        const bundlwiseObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && !hasAnimated) {
+              // Add all the active classes once
+              const bottomElement = document.querySelector('.ApiFig1_bottom__XigQ9');
+              const focusElement = document.querySelector('.ApiFig1_focus__4Hnww');
+              const selectedItemElement = document.querySelector('.ApiFig1_selectedItem__Lchoi.ApiFig1_label__fJyyX');
+              const topElement = document.querySelector('.ApiFig1_top__gJ6NC');
+              const listContentElement = document.querySelector('.ApiFig1_listContent__CNRZH.ApiFig1_label__fJyyX');
+              const searchBarElement = document.querySelector('.ApiFig1_searchBar__s05nU.ApiFig1_label__fJyyX');
+              const labelElements = document.querySelectorAll('.ApiFig1_label__fJyyX');
+
+              // Add active classes
+              if (bottomElement) bottomElement.classList.add('ApiFig1_bottomActive__y8pRx');
+              if (focusElement) focusElement.classList.add('ApiFig1_focusActive__tvwAn');
+              if (selectedItemElement) selectedItemElement.classList.add('ApiFig1_labelActive__wEl2m');
+              if (topElement) topElement.classList.add('ApiFig1_topActive__VxzQW');
+              if (listContentElement) listContentElement.classList.add('ApiFig1_labelActive__wEl2m');
+              if (searchBarElement) searchBarElement.classList.add('ApiFig1_labelActive__wEl2m');
+
+              // Add active class to all label elements
+              labelElements.forEach(label => {
+                label.classList.add('ApiFig1_labelActive__wEl2m');
+              });
+
+              hasAnimated = true; // Mark as animated
+             
+            }
+          });
+        }, {
+          threshold: 0.5 // Trigger when 50% of the element is visible
+        });
+
+        bundlwiseObserver.observe(bundlwiseElement);
+      } else {
+        
+      }
+    }
+
+    // Initialize Ubuntu button cycling animation
+    function initUbuntuButtonAnimations() {
+      const button1 = document.querySelector('.alsoarpit_ubuntu_button_1');
+      const button2 = document.querySelector('.alsoarpit_ubuntu_button_2');
+
+      let animationInterval = null;
+      let isAnimating = false;
+
+      const startAnimation = () => {
+        if (isAnimating) return;
+        isAnimating = true;
+
+        // Clear any existing animation
+        if (animationInterval) {
+          clearInterval(animationInterval);
+        }
+
+        // Set initial state - button1 active, button2 not active
+        button1.classList.add('ApiFig3_isActive__2YX3s');
+        button2.classList.remove('ApiFig3_isActive__2YX3s');
+
+
+        // Start the infinite cycling animation
+        animationInterval = setInterval(() => {
+          // Toggle classes - when button1 has active class, button2 should not, and vice versa
+          if (button1.classList.contains('ApiFig3_isActive__2YX3s')) {
+            // Remove from button1, add to button2
+            button1.classList.remove('ApiFig3_isActive__2YX3s');
+            button2.classList.add('ApiFig3_isActive__2YX3s');
+           
+          } else {
+            // Remove from button2, add to button1
+            button1.classList.add('ApiFig3_isActive__2YX3s');
+            button2.classList.remove('ApiFig3_isActive__2YX3s');
+          }
+        }, 2000);
+      };
+
+      const stopAnimation = () => {
+        if (animationInterval) {
+          clearInterval(animationInterval);
+          animationInterval = null;
+        }
+        isAnimating = false;
+        // Reset to initial state - button1 active, button2 not active
+        button1.classList.add('ApiFig3_isActive__2YX3s');
+        button2.classList.remove('ApiFig3_isActive__2YX3s');
+      };
+
+      // Observer for Ubuntu button container
+      const ubuntuContainer = document.getElementById('ubuntu_section');
+
+      if (ubuntuContainer) {
+        const ubuntuObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              startAnimation();
+            } else {
+              stopAnimation();
+            }
+          });
+        }, {
+          threshold: 0.3 // Trigger when 30% of the element is visible (more sensitive)
+        });
+
+        ubuntuObserver.observe(ubuntuContainer);
+      } else {
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        initDockFunctionality();
+        initApiFig2Animations();
+        initQuestionFinderAnimation();
+        initBundlwiseAnimation();
+        initUbuntuButtonAnimations();
+      });
+    } else {
+      initDockFunctionality();
+      initApiFig2Animations();
+      initQuestionFinderAnimation();
+      initBundlwiseAnimation();
+      initUbuntuButtonAnimations();
+    }
+
+  });
+</script>

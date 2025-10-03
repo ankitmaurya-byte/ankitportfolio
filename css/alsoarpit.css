@@ -1,0 +1,11 @@
+.also-hero-screen_window_opacity_0 {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  border: none;
+  backdrop-filter: none;
+}
+
+.also-image_scale_1_2 {
+  transform: scale(1.2);
+}
